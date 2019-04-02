@@ -7,7 +7,7 @@ var NumCookieTypes = 6
 var score			= 0
 var targetScore		= 0
 var movesLeft		= 0
-var maxMoves		= 0
+#var maxMoves		= 0
 
 const TILE_MASK		= 8
 const TILE_WIDTH	= 64.0
@@ -34,7 +34,6 @@ func get_VisibleSize():
 
 func _ready():
 	currentScene = get_tree().get_root().get_child(get_tree().get_root().get_child_count() -1)
-	Globals.set("MAX_POWER_LEVEL", 9000)
 
 func setScene(scene):
 	currentScene.queue_free()

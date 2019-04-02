@@ -1,7 +1,7 @@
 extends Node2D
 
 var level
-var swap
+#var swap
 var cookiesLayer
 var tilesLayer
 
@@ -35,10 +35,10 @@ func _enter_tree():
 	add_child(level, true)
 	
 	tilesLayer = get_node("TilesLayer")
-	tilesLayer.set_pos(getLayerPos())
+	tilesLayer.position = getLayerPos()
 	
 	cookiesLayer = get_node("CookiesLayer")
-	cookiesLayer.set_pos(getLayerPos())
+	cookiesLayer.position = getLayerPos()
 
 func removeAllCookies():
 	for child in cookiesLayer.get_children():
@@ -73,13 +73,13 @@ func preloadResources():
 	sounds["fallingCookies"]= "Drip"
 
 func addTiles():
-	for row in range(-1, global.NumRows, 1):
-		for column in range(global.NumColumns):
-			if row >= 0 && level.tileAt(column, row) == null:
-				level.createLighMaskAt(pointFor(column, row), tilesLayer)
-			elif row == -1 && level.tileAt(column, row) != null:
-				level.createLighMaskAt(pointFor(column, row), tilesLayer)
-	
+	#for row in range(-1, global.NumRows, 1):
+	#	for column in range(global.NumColumns):
+	#		if row >= 0 && level.tileAt(column, row) == null:
+	#			level.createLighMaskAt(pointFor(column, row), tilesLayer)
+	#		elif row == -1 && level.tileAt(column, row) != null:
+	#			level.createLighMaskAt(pointFor(column, row), tilesLayer)
+	#
 	for row in range(global.NumRows, -1, -1):
 		for column in range(global.NumColumns+1):
 			var topLeft = (column > 0 && row < global.NumRows && level.tileAt(column-1, row))
@@ -97,7 +97,7 @@ func addTiles():
 				var sprite = Sprite.new()
 				var texture = ResourceLoader.load(path)
 				sprite.set_texture(texture)
-				sprite.set_pos(pos)
+				sprite.position = pos
 				tilesLayer.add_child(sprite)
 			
 
@@ -108,21 +108,27 @@ func addSpritesFor(cookies):
 	for cookie in cookies:
 		var sprite = Sprite.new()
 		var tex = cookiesList[int(cookie.cookieType-1)]
-		sprite.set_z(10)
-		sprite.set_light_mask(8)
-		sprite.set_texture(tex)
-		sprite.set_pos(pointFor(cookie.column, cookie.row))
+		sprite.z_index = 10
+		sprite.light_mask = 8
+		sprite.texture = tex
+		sprite.position = pointFor(cookie.column, cookie.row)
 		cookiesLayer.add_child(sprite)
 		cookie.sprite = sprite
-		cookie.sprite.set_opacity(0)
-		cookie.sprite.set_scale(Vector2(0.5, 0.5))
+		cookie.sprite.modulate.a = 1
+		cookie.sprite.scale = Vector2(0.5, 0.5)
 		
 		var delay = rand_range(0.25, 0.5)
 		
-		tween.interpolate_method(cookie.sprite, "set_opacity", 0.0, 1.0, 0.25, Tween.TRANS_LINEAR, \
+		tween.interpolate_property(cookie.sprite, "modulate:a", 0.0, 1.0, 0.25, Tween.TRANS_LINEAR, \
 		Tween.EASE_OUT, delay)
-		tween.interpolate_method(cookie.sprite, "set_scale", Vector2(0.5, 0.5), Vector2(1.0, 1.0), \
+		tween.interpolate_property(cookie.sprite, "scale", Vector2(0.5, 0.5), Vector2(1.0, 1.0), \
 		0.25, Tween.TRANS_LINEAR, Tween.EASE_OUT, delay)
+
+		# old 2.0 code
+		#tween.interpolate_method(cookie.sprite, "set_opacity", 0.0, 1.0, 0.25, Tween.TRANS_LINEAR, \
+		#Tween.EASE_OUT, delay)
+		#tween.interpolate_method(cookie.sprite, "set_scale", Vector2(0.5, 0.5), Vector2(1.0, 1.0), \
+		#0.25, Tween.TRANS_LINEAR, Tween.EASE_OUT, delay)
 	
 	tween.interpolate_callback(self, tween.get_runtime(), "removeNode", tween)
 	tween.start()
@@ -218,29 +224,29 @@ func animateInvalidSwap(swap):
 		setUserInteraction(true);
 		return
 	
-	swap.cookieA.sprite.set_z(100)
-	swap.cookieB.sprite.set_z(90)
+	swap.cookieA.sprite.z_index = 100
+	swap.cookieB.sprite.z_index = 90
 	
 	var tween = Tween.new()
 	add_child(tween)
 	
-	#var cookieAPos = swap.cookieA.sprite.get_pos()
-	#var cookieBPos = swap.cookieB.sprite.get_pos()
+	#var cookieAPos = swap.cookieA.sprite.position
+	#var cookieBPos = swap.cookieB.sprite.position
 	
 	var cookieAPos = pointFor(swap.cookieA.column, swap.cookieA.row)
 	var cookieBPos = pointFor(swap.cookieB.column, swap.cookieB.row)
 	
 	var duration = 0.3
-	var property = "transform/pos"
+	#var property = "transform/pos"
 	
 	var bubbleA = Sprite.new()
-	bubbleA.set_texture(mainRes.bubble)
-	bubbleA.set_scale(Vector2(1, 1))
-	bubbleA.set_pos(swap.cookieA.sprite.get_pos())
+	bubbleA.texture = mainRes.bubble
+	bubbleA.scale = Vector2(1, 1)
+	bubbleA.position = swap.cookieA.sprite.position
 	var bubbleB = Sprite.new()
-	bubbleB.set_texture(mainRes.bubble)
-	bubbleB.set_scale(Vector2(1, 1))
-	bubbleB.set_pos(swap.cookieB.sprite.get_pos())
+	bubbleB.texture = mainRes.bubble
+	bubbleB.scale = Vector2(1, 1)
+	bubbleB.position = swap.cookieB.sprite.position
 	
 	cookiesLayer.add_child(bubbleA)
 	cookiesLayer.add_child(bubbleB)
@@ -251,39 +257,37 @@ func animateInvalidSwap(swap):
 	Tween.TRANS_LINEAR, Tween.EASE_OUT)
 	tween.interpolate_callback(self, tween.get_runtime(), "removeNode", bubbleA, bubbleB)
 	
-	tween.interpolate_method(swap.cookieA.sprite, "set_pos", cookieAPos, cookieBPos, duration,\
+	tween.interpolate_method(swap.cookieA.sprite, "set_position", cookieAPos, cookieBPos, duration,\
 	Tween.TRANS_LINEAR, Tween.EASE_OUT)
-	tween.interpolate_method(swap.cookieB.sprite, "set_pos", cookieBPos, cookieAPos, duration,\
+	tween.interpolate_method(swap.cookieB.sprite, "set_position", cookieBPos, cookieAPos, duration,\
 	Tween.TRANS_LINEAR, Tween.EASE_OUT)
-	tween.interpolate_method(swap.cookieA.sprite, "set_pos", cookieBPos, cookieAPos, duration,\
+	tween.interpolate_method(swap.cookieA.sprite, "set_position", cookieBPos, cookieAPos, duration,\
 	Tween.TRANS_LINEAR, Tween.EASE_OUT, duration)
-	tween.interpolate_method(swap.cookieB.sprite, "set_pos", cookieAPos, cookieBPos, duration,\
+	tween.interpolate_method(swap.cookieB.sprite, "set_position", cookieAPos, cookieBPos, duration,\
 	Tween.TRANS_LINEAR, Tween.EASE_OUT, duration)
 	tween.interpolate_callback(self, tween.get_runtime(), "completeSwap", tween, swap.cookieA.sprite, true)
 	tween.start()
 	pass
 
 func animateSwap(swap):
-	swap.cookieA.sprite.set_z(100)
-	swap.cookieB.sprite.set_z(90)
+	swap.cookieA.sprite.z_index = 100
+	swap.cookieB.sprite.z_index = 90
 	
-	var cookieAPos = swap.cookieA.sprite.get_pos()
-	var cookieBPos = swap.cookieB.sprite.get_pos()
+	var cookieAPos = swap.cookieA.sprite.position
+	var cookieBPos = swap.cookieB.sprite.position
 	
 	var tween = Tween.new()
 	add_child(tween)
 	
-	var duration = 0.3
-	var property = "transform/pos"
-	
+	var duration = 0.3	
 	var bubbleA = Sprite.new()
-	bubbleA.set_texture(mainRes.bubble)
-	bubbleA.set_scale(Vector2(1, 1))
-	bubbleA.set_pos(swap.cookieA.sprite.get_pos())
+	bubbleA.texture = mainRes.bubble
+	bubbleA.scale = Vector2(1, 1)
+	bubbleA.position = swap.cookieA.sprite.position
 	var bubbleB = Sprite.new()
-	bubbleB.set_texture(mainRes.bubble)
-	bubbleB.set_scale(Vector2(1, 1))
-	bubbleB.set_pos(swap.cookieB.sprite.get_pos())
+	bubbleB.texture = mainRes.bubble
+	bubbleB.scale = Vector2(1, 1)
+	bubbleB.position = swap.cookieB.sprite.position
 	
 	cookiesLayer.add_child(bubbleA)
 	cookiesLayer.add_child(bubbleB)
@@ -294,9 +298,9 @@ func animateSwap(swap):
 	Tween.TRANS_LINEAR, Tween.EASE_OUT)
 	tween.interpolate_callback(self, tween.get_runtime(), "removeNode", bubbleA, bubbleB)
 	
-	var moveA = tween.interpolate_property(swap.cookieA.sprite, property, cookieAPos, cookieBPos, \
+	var moveA = tween.interpolate_property(swap.cookieA.sprite, "position", cookieAPos, cookieBPos, \
 	duration, Tween.TRANS_LINEAR, Tween.EASE_OUT)
-	var moveB = tween.interpolate_property(swap.cookieB.sprite, property, cookieBPos, cookieAPos, \
+	var moveB = tween.interpolate_property(swap.cookieB.sprite, "position", cookieBPos, cookieAPos, \
 	duration, Tween.TRANS_LINEAR, Tween.EASE_OUT)
 	tween.interpolate_callback(self, tween.get_runtime(), "completeSwap", tween, swap.cookieA)
 	
@@ -304,7 +308,6 @@ func animateSwap(swap):
 	pass
 
 func animateMatched(chains):
-	var property = "transform/scale"
 	var tween = Tween.new()
 	add_child(tween)
 	
@@ -316,15 +319,15 @@ func animateMatched(chains):
 				add_child(expTween)
 				
 				var expA = mainRes.starExp.instance()
-				expA.set_lifetime(1.0)
-				expA.set_emitting(true)
-				expA.set_emit_timeout(0.8)
-				expA.set_pos(cookie.sprite.get_pos())
+				expA.lifetime = 1.0
+				expA.emitting = true
+				#expA.lifetime = 1
+				expA.position = cookie.sprite.position
 				
 				var bubbleA = Sprite.new()
-				bubbleA.set_texture(mainRes.bubble)
-				bubbleA.set_scale(Vector2(0.4, 0.4))
-				bubbleA.set_pos(cookie.sprite.get_pos())
+				bubbleA.texture = mainRes.bubble
+				bubbleA.scale = Vector2(0.4, 0.4)
+				bubbleA.position = cookie.sprite.position
 				
 				cookiesLayer.add_child(bubbleA)
 				cookiesLayer.add_child(expA)
@@ -332,14 +335,22 @@ func animateMatched(chains):
 				tween.interpolate_method(bubbleA, "set_scale", bubbleA.get_scale(), Vector2(1.0, 1.0), \
 				0.3, Tween.TRANS_LINEAR, Tween.EASE_OUT)
 				
-				tween.interpolate_property(cookie.sprite, property, cookie.sprite.get_scale(), \
+				tween.interpolate_property(cookie.sprite, "position", cookie.sprite.get_scale(), \
 				Vector2(0.1, 0.1), 0.3, Tween.TRANS_LINEAR, Tween.EASE_OUT)
-				tween.interpolate_method(cookie.sprite, "set_opacity", cookie.sprite.get_opacity(), \
+				tween.interpolate_property(cookie.sprite, "modulate:a", cookie.sprite.modulate.a, \
 				0.3, 0.3, Tween.TRANS_LINEAR, Tween.EASE_OUT)
+
+				# old 2.0 code
+				#tween.interpolate_method(cookie.sprite, "set_opacity", cookie.sprite.get_opacity(), \
+				#0.3, 0.3, Tween.TRANS_LINEAR, Tween.EASE_OUT)
 				tween.interpolate_callback(self, tween.get_runtime(), "removeNode", cookie.sprite, bubbleA)
 				
-				expTween.interpolate_method(expA, "set_opacity", expA.get_opacity(), \
+				expTween.interpolate_property(expA, "modulate:a", expA.modulate.a, \
 				0.0, 0.5, Tween.TRANS_LINEAR, Tween.EASE_OUT, 0.3)
+
+				# old 2.0 code
+				#expTween.interpolate_method(expA, "set_opacity", expA.get_opacity(), \
+				#0.0, 0.5, Tween.TRANS_LINEAR, Tween.EASE_OUT, 0.3)
 				expTween.interpolate_callback(self, expTween.get_runtime(), "removeNode", expA, expTween)
 				expTween.start()
 				
@@ -350,7 +361,6 @@ func animateMatched(chains):
 	pass
 
 func animateFallingCookies(columns):
-	var property = "transform/pos"
 	var tween = Tween.new()
 	add_child(tween)
 	
@@ -358,25 +368,23 @@ func animateFallingCookies(columns):
 		var idx = 0
 		for cookie in array:
 			var newPosition = pointFor(cookie.column, cookie.row)
-			var newPosition1 = Vector2(newPosition.x, newPosition.y-3)
+			var newPosition1 = Vector2(newPosition.x, newPosition.y - 3)
 			
-			var delay = (0.05 + idx/10.0) * 0.1
-			var duration = ((newPosition.y - cookie.sprite.get_pos().y) / global.TILE_HEIGHT) * 0.1
+			var delay = (0.05 + idx / 10.0) * 0.1
+			var duration = ((newPosition.y - cookie.sprite.position.y) / global.TILE_HEIGHT) * 0.1
 			
-			tween.interpolate_property(cookie.sprite, property, cookie.sprite.get_pos(), \
+			tween.interpolate_property(cookie.sprite, "position", cookie.sprite.position, \
 			newPosition, duration, Tween.TRANS_LINEAR, Tween.EASE_OUT, delay)
-			tween.interpolate_property(cookie.sprite, property, newPosition, newPosition1, \
-			0.1, Tween.TRANS_LINEAR, Tween.EASE_OUT, duration+delay)
-			tween.interpolate_property(cookie.sprite, property, newPosition1, newPosition, \
-			0.1, Tween.TRANS_LINEAR, Tween.EASE_OUT, duration+delay+0.1)
+			tween.interpolate_property(cookie.sprite, "position", newPosition, newPosition1, \
+			0.1, Tween.TRANS_LINEAR, Tween.EASE_OUT, duration + delay)
+			tween.interpolate_property(cookie.sprite, "position", newPosition1, newPosition, \
+			0.1, Tween.TRANS_LINEAR, Tween.EASE_OUT, duration + delay + 0.1)
 			
 			idx += 1
 	tween.interpolate_callback(self, tween.get_runtime(), "completeFalling", tween)
 	tween.start()
 
 func animateNewCookies(columns):
-	var property = "transform/pos"
-	
 	var tween = Tween.new()
 	add_child(tween)
 	
@@ -386,9 +394,9 @@ func animateNewCookies(columns):
 		array.invert()
 		for cookie in array:
 			var sprite = Sprite.new()
-			sprite.set_texture(cookiesList[cookie.cookieType-1])
-			sprite.set_pos(pointFor(cookie.column, startRow))
-			sprite.set_light_mask(global.TILE_MASK)
+			sprite.texture = cookiesList[cookie.cookieType-1]
+			sprite.position = pointFor(cookie.column, startRow)
+			sprite.light_mask = global.TILE_MASK
 			cookiesLayer.add_child(sprite)
 			cookie.sprite = sprite
 			
@@ -397,12 +405,12 @@ func animateNewCookies(columns):
 			var delay = (0.05 + (idx/10.0))
 			var duration = ((cookie.row - startRow) * 0.1)
 			
-			tween.interpolate_property(cookie.sprite, property, cookie.sprite.get_pos(), \
+			tween.interpolate_property(cookie.sprite, "position", cookie.sprite.position, \
 			newPosition, duration, Tween.TRANS_LINEAR, Tween.EASE_OUT, delay)
-			tween.interpolate_property(cookie.sprite, property, newPosition, newPosition1, \
+			tween.interpolate_property(cookie.sprite, "position", newPosition, newPosition1, \
 			0.1, Tween.TRANS_LINEAR, Tween.EASE_OUT, duration+delay)
-			tween.interpolate_property(cookie.sprite, property, newPosition1, newPosition, \
-			0.1, Tween.TRANS_LINEAR, Tween.EASE_OUT, duration+delay+0.1)
+			tween.interpolate_property(cookie.sprite, "position", newPosition1, newPosition, \
+			0.1, Tween.TRANS_LINEAR, Tween.EASE_OUT, duration + delay + 0.1)
 			
 			idx += 1
 	tween.interpolate_callback(self, tween.get_runtime(), "completeAddCookie", tween)
@@ -425,25 +433,25 @@ func animateScoreForChain(chain):
 	
 	var cPos = pointFor(column, row)
 	var node = Node2D.new()
-	node.set_name("ScoreLabelNode")
-	node.set_pos(cPos)
-	node.set_z(300)
+	node.name = "ScoreLabelNode"
+	node.position = cPos
+	node.z_index = 300
 	
 	var scoreLabel = Label.new()
 	scoreLabel.set("custom_fonts/font", preload("res://Fonts/foo_shadow_34.fnt"))
 	scoreLabel.set("custom_colors/font_color", Color8(225, 80.68, 80.68))
-	scoreLabel.set_text(str(chain.score))
+	scoreLabel.text = str(chain.score)
 	
 	var size = scoreLabel.get_combined_minimum_size()
-	scoreLabel.set_pos(Vector2(0.0-size.width/2, 0.0-size.height/2))
+	scoreLabel.rect_position = Vector2(0.0 - size.x / 2, 0.0 - size.y / 2)
 	
-	node.set_scale(Vector2(0.8, 0.8))
+	node.scale = Vector2(0.8, 0.8)
 	node.add_child(scoreLabel)
 	cookiesLayer.add_child(node)
 	
 	tween.interpolate_method(node, "set_scale", Vector2(0.8, 0.8), Vector2(1.0, 1.0), 0.2, \
 	Tween.TRANS_LINEAR, Tween.EASE_OUT)
-	tween.interpolate_method(node, "set_pos", cPos, Vector2(cPos.x, cPos.y-6), 0.7, \
+	tween.interpolate_method(node, "set_position", cPos, Vector2(cPos.x, cPos.y-6), 0.7, \
 	Tween.TRANS_LINEAR, Tween.EASE_OUT)
 	tween.interpolate_method(node, "set_opacity", 1.0, 0.3, 0.3, Tween.TRANS_LINEAR, Tween.EASE_OUT, \
 	tween.get_runtime())
@@ -454,15 +462,15 @@ func animateBeginEndGame(end = false):
 	var tween = Tween.new()
 	add_child(tween)
 	
-	var cPos = get_pos()
-	var pos = Vector2(get_pos().x + (global.NumColumns*global.TILE_WIDTH)*2, get_pos().y)
+	var cPos = position
+	var pos = Vector2(position.x + (global.NumColumns*global.TILE_WIDTH)*2, position.y)
 	
 	if end:
 		cPos = pos
-		pos = get_pos()
-	else: set_pos(pos)
+		pos = position
+	else: position = pos
 	
-	tween.interpolate_method(self, "set_pos", pos, cPos, 1.0, Tween.TRANS_BACK, \
+	tween.interpolate_method(self, "set_position", pos, cPos, 1.0, Tween.TRANS_BACK, \
 	(Tween.EASE_OUT if not end else Tween.EASE_IN))
 	tween.interpolate_callback(self, tween.get_runtime(), "removeNode", tween)
 	tween.start()
@@ -481,22 +489,22 @@ var touchStartPos
 var touchCurrentPos
 
 func _input(event):
-	if event.type == InputEvent.MOUSE_BUTTON and event.button_index == BUTTON_LEFT and event.is_pressed():
+	if event is InputEventMouseButton and event.button_index == BUTTON_LEFT and event.is_pressed():
 		touchStared = true
 		touchBegin(event)
-	if event.type == InputEvent.MOUSE_BUTTON and event.button_index == BUTTON_LEFT and not event.is_pressed():
+	if event is InputEventMouseButton and event.button_index == BUTTON_LEFT and not event.is_pressed():
 		touchStared = false
 		touchEnded(event)
-	if event.type == InputEvent.MOUSE_MOTION:
+	if event is InputEventMouseMotion:
 		if touchStared: touchMoved(event)
 	
-	if event.type == InputEvent.SCREEN_TOUCH and event.is_pressed():
+	if event is InputEventScreenTouch and event.is_pressed():
 		touchStared = true
 		touchBegin(event)
-	if event.type == InputEvent.SCREEN_TOUCH and not event.is_pressed():
+	if event is InputEventScreenTouch and not event.is_pressed():
 		touchStared = false
 		touchEnded(event)
-	if event.type == InputEvent.SCREEN_DRAG and event.is_pressed():
+	if event is InputEventScreenDrag and event.is_pressed():
 		if touchStared: touchMoved(event)
 
 var touchInColumn1
@@ -504,7 +512,7 @@ var touchInRow1
 
 func touchBegin(event):
 	if not userInteractionEnabled: return
-	var location = event.pos - cookiesLayer.get_global_pos()
+	var location = event.position - cookiesLayer.global_position
 	
 	if convertPoint(location):
 		var cookie = level.cookieAt(touchInColumn1, touchInRow1)
@@ -536,7 +544,7 @@ func touchMoved(event):
 	if not userInteractionEnabled: return
 	if swipeFromColumn == null: return
 	
-	var location = event.pos - cookiesLayer.get_global_pos()
+	var location = event.position - cookiesLayer.global_position
 	
 	if convertPoint(location, false):
 		var horzDelte = 0

@@ -7,10 +7,10 @@ func set_jsonfile(value):
 	global.jsonLevelFile = jsonFile
 
 func _enter_tree():
-	jsonFile = "res://Level/Level_1.json"
+	set_jsonfile("res://Level/Level_1.json")
 
 func _ready():
-	var winSize = get_parent().get_VisibleSize()
+	#var winSize = get_parent().get_VisibleSize()
 	get_node("GameLayer").addTiles()
 	
 	beginGame()

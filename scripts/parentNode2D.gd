@@ -6,7 +6,7 @@ func set_background(value):
 	background = value
 
 func get_VisibleSize():
-	return get_parent().get_rect().size
+	return get_parent().rectangle.size
 
 func get_center():
 	var vSize = get_VisibleSize()

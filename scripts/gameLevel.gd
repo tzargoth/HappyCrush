@@ -28,9 +28,9 @@ func createLighMaskAt(pos, layer):
 	var light = Light2D.new()
 	light.set_enabled(true)
 	light.set_texture(tileMask)
-	light.set_item_mask(global.TILE_MASK)
-	light.set_pos(pos)
-	light.set_mode(Light2D.MODE_MASK)
+	#light.set_item_mask(global.TILE_MASK)
+	light.position = pos
+	light.mode = Light2D.MODE_MASK
 	
 	layer.add_child(light)
 
@@ -49,12 +49,14 @@ func createCookieAt(column, row, cookieType):
 	return cookie
 
 func cookieAt(column, row):
-	if column == null || row == null: print("Wrong loc"); return null
-	
-	assert(column >= 0 && column < global.NumColumns)
-	assert(row >= 0 && row < global.NumRows)
-	
-	return _cookies[column][row]
+	if column != null && row != null:
+		assert(column >= 0 && column < global.NumColumns)
+		assert(row >= 0 && row < global.NumRows)
+		
+		return _cookies[column][row]
+	else:
+		print("bad loc")
+		return null
 
 func initWithFile(file_path):
 	_tiles.clear()
@@ -63,17 +65,17 @@ func initWithFile(file_path):
 	var file = File.new()
 	if file.file_exists(file_path):
 		file.open(file_path, File.READ)
-	else: print("File Not exists"); return
+	else:
+		print("File Not exists")
+		return
 	
-	var txt = file.get_as_text()
+	var txt = file.get_as_text()	
+	var level = parse_json(txt)
 	
-	var dict = Dictionary()
-	dict.parse_json(txt)
-	
-	var tileset = dict["tiles"]
-	maximumMoves = dict["moves"]
-	targetScore = dict["targetScore"]
-	definedType = dict["definedType"]
+	var tileset = level["tiles"]
+	maximumMoves = level["moves"]
+	targetScore = level["targetScore"]
+	definedType = level["definedType"]
 	
 	_tiles.resize(global.NumColumns)
 	_tiles.append(Array().resize(global.NumRows))
@@ -85,11 +87,15 @@ func initWithFile(file_path):
 		_tiles[column] = []
 		_cookies[column] = []
 		for row in range(global.NumRows):
-			if tileset[row][column] > 1: _cookies[column].append(gameCookie.new(tileset[row][column]-5))
-			else: _cookies[column].append(gameCookie.new())
+			if tileset[row][column] > 1:
+				_cookies[column].append(gameCookie.new(tileset[row][column]-5))
+			else:
+				_cookies[column].append(gameCookie.new())
 			
-			if tileset[row][column] != 0: _tiles[column].append(Tile.new())
-			else: _tiles[column].append(null)
+			if tileset[row][column] != 0:
+				_tiles[column].append(Tile.new())
+			else:
+				_tiles[column].append(null)
 
 func performSwap(swap):
 	var columnA = swap.cookieA.column;
@@ -306,10 +312,10 @@ func detectTLMatches(hChains, vChains):
 			
 			for cookie in vCookies:
 				var cookieIndex = vCookies.find(cookie)
-				var match = hCookies.find(cookie)
+				var matches = hCookies.find(cookie)
 				
-				if (match == 0 && (cookieIndex == 0 || cookieIndex == vCookies.size()-1)) || \
-				(match == hCookies.size()-1 && (cookieIndex == 0 || cookieIndex == vCookies.size()-1)):
+				if (matches == 0 && (cookieIndex == 0 || cookieIndex == vCookies.size()-1)) || \
+				(matches == hCookies.size()-1 && (cookieIndex == 0 || cookieIndex == vCookies.size()-1)):
 					chain.setCookies(vCookies+hCookies)
 					chain.chainType = chain.ChainLShape
 					chain.matchColumn = cookie.column
@@ -317,10 +323,10 @@ func detectTLMatches(hChains, vChains):
 					set.append(chain)
 					vChains.erase(vChain)
 					hChains.erase(hChain)
-				elif (match > 0 && match < hCookies.size()-1 && \
+				elif (matches > 0 && matches < hCookies.size()-1 && \
 				(cookieIndex == 0 || cookieIndex == vCookies.size()-1)) || \
 				(cookieIndex > 0 && cookieIndex < vCookies.size()-1 && \
-				(match == 0 || match == hCookies.size()-1)):
+				(matches == 0 || matches == hCookies.size()-1)):
 					chain.setCookies(vCookies+hCookies)
 					chain.chainType = chain.ChainTShape
 					chain.matchColumn = cookie.column

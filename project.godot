@@ -1,0 +1,44 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=4
+
+_global_script_classes=[  ]
+_global_script_class_icons={
+
+}
+
+[application]
+
+config/name="happy crush"
+run/main_scene="res://GameScene.tscn"
+name="Happy smash"
+main_scene="res://GameScene.tscn"
+boot_splash="res://splash.png"
+icon="res://icon.png"
+
+[autoload]
+
+mainRes="*res://scripts/preloadResources.gd"
+global="*res://scripts/global.gd"
+
+[display]
+
+window/size/width=560
+window/size/height=880
+window/size/resizable=false
+window/handheld/orientation="portrait"
+borderless_window=false
+height=1028
+test_height=514
+width=600
+test_width=300
+stretch_mode="2d"
+resizable=true
+stretch_aspect="keep"
+orientation="portrait"
